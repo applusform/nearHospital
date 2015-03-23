@@ -3,6 +3,7 @@
 
 Screen shot :
 ![Screen shot](http://applusform.github.io/nearHospital/screenshot1.png)
+![Screen shot](http://applusform.github.io/nearHospital/screenshot2.png)
 
 ### 인증키 발급
 https://www.data.go.kr 에서 오픈API - 전국 병‧의원 찾기 서비스의 [SERVICE KEY]를 발급 받아야 합니다. 
