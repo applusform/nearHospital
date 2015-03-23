@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+<style>
+html,body,#map-canvas {
+	height: 100%;
+	margin: 0px;
+	padding: 0px
+}
+</style>
+<script
+	src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&language=ko"></script>
+<script>
+
+	function initialize() {
+
+		var pos = new google.maps.LatLng($LATITUDE$, $LONGITUDE$);
+		var mapOptions = {
+			zoom : 15,
+			center : pos,
+			panControl : false,
+			zoomControl : true,
+			zoomControlOptions: {
+				position : google.maps.ControlPosition.RIGHT_BOTTOM
+			},
+			mapTypeControl : true,
+			scaleControl : true,
+			streetViewControl : false,
+			overviewMapControl : false,
+			mapTypeId : google.maps.MapTypeId.ROADMAP
+
+		}
+		var map = new google.maps.Map(document.getElementById('map-canvas'),
+				mapOptions);
+
+		var marker = new google.maps.Marker({
+			icon: new google.maps.MarkerImage('http://maps.google.com/mapfiles/ms/micons/hospitals.png'),
+			position : pos,
+			title : "target",
+			map : map
+		});
+
+		var myPos = new google.maps.LatLng($MYLATITUDE$, $MYLONGITUDE$);
+
+		var myPosMarker = new google.maps.Marker({
+			icon: new google.maps.MarkerImage('http://maps.google.com/mapfiles/ms/micons/man.png'),
+			position : myPos,
+			title : "here",
+			map : map
+		});
+
+		var infowindow = new google.maps.InfoWindow({
+			content : '<span><b>$ADDRESS$</b></span>'
+		});
+
+		google.maps.event.addListener(marker, 'click', function() {
+			infowindow.open(map, marker);
+		});
+
+		window.setTimeout(function() {
+		infowindow.open(map, marker);
+		}, 2000);
+		
+	}
+
+	google.maps.event.addDomListener(window, 'load', initialize);
+</script>
+</head>
+<body>
+	<div id="map-canvas"></div>
+</body>
+</html>

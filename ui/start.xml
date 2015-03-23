@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MOML version="1.1.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.applusform.com/xsd/moml_ui_1.1.8.xsd">
+	<THEMES>
+		<THEME element="BUTTON" textColor="#ffffff" defaultImg="#0080ff" pressedImg="#008000" margin="1"/>
+	</THEMES>
+	
+	<UILAYOUT portrait="320,480" landscape="320,480">
+		<WINDOW layout="0,0,320,480" img="white" align="linear:vertical" padding="10,20,10,0">
+			<LABEL text="가까운 병원 검색 : "/>
+
+			<WINDOW align="linear:subCenter">
+				<BUTTON layout="160,30" text="현위치 확인" onClick="function.findLocation" />
+				<BUTTON layout="60,30" text="검색" onClick="function.search" />
+			</WINDOW>
+
+			<WINDOW align="linear:subCenter">
+				<LABEL layout="40,30" text="위도 : " textAlign="right|vCenter"/>
+				<EDIT id="latitude" layout="110,30" textAlign="vCenter" text="37.5467649"/>
+				<LABEL layout="40,30" text="경도 : " textAlign="right|vCenter"/>
+				<EDIT id="longitude" layout="110,30" textAlign="vCenter" text="127.0638224"/>
+			</WINDOW>
+			<LABEL id="address" layout="300,30" fontSize="10" textAlign="vCenter" textColor="gray"/>
+
+			<WINDOW layout="300,300" align="relative">
+				<LIST2 id="hospitalList" layout="0,0,300,300" dataList="//item" img="lightsteelblue" divider="#808080">
+					<LISTLAYOUT>
+						<BUTTON layout="0,0,300,60" img="transparent" pressedImg="#80a0ff" onClick="function.showMap">
+							<LABEL id="divName" layout="5,3,50,10" text="{xpath.evaluate('dutyDivName/text()')}" textAlign="vCenter" fontSize="10" />
+							<LABEL id="name" layout="55,3,200,15" text="{xpath.evaluate('dutyName/text()')}" textAlign="vCenter" fontSize="13" />
+							<LABEL id="distance" layout="260,3,30,15" text="{xpath.evaluate('distance/text()') * 1000} m" textAlign="vCenter" fontSize="10" />
+							<LABEL id="address" layout="55,20,240,15" text="{xpath.evaluate('dutyAddr/text()')}" textAlign="vCenter" fontSize="10" />
+							<LABEL id="time" layout="55,38,50,20" text="{function.toTime(xpath.evaluate('startTime/text()'))} ~ {function.toTime(xpath.evaluate('endTime/text()'))}" textAlign="vCenter" fontSize="10" />
+							<BUTTON id="map" layout="150,38,50,20" text="지도" onClick="function.showMap"/>
+							<BUTTON id="tel" layout="205,38,90,20" text="{xpath.evaluate('dutyTel1/text()')}" fontSize="8" onClick="appLauncher.openUri('tel:' + caller.text, '')"/>
+						</BUTTON>
+					</LISTLAYOUT>
+				</LIST2>
+				
+				<WINDOW id="detailMap" layout="0,0,300,300" visible="invisible" defaultImg="lightsteelblue" onClick="ignore">
+					<LABEL id="mapTitle" layout="0,0,300,30" textAlign="center" fontSize="15" defaultImg="#e0e0ff"/>
+					<WEBVIEW id="mapWebView" layout="10,30,280,230" controls="none"/>
+					<BUTTON layout="125,265,50,30" text="닫기" onClick="mapWebView.clear; detailMap.visible=false" />
+				</WINDOW>
+			</WINDOW>
+			
+			<LABEL text="자료제공 : 국립중앙의료원" />
+		</WINDOW>
+	</UILAYOUT>
+
+	<!-- https://www.data.go.kr 에서 오픈API - 국문 관광정보 서비스의 [SERVICE KEY]를 발급 받아야 합니다. -->
+	<!-- 다른 사람의 키를 사용할 경우 트래픽을 초과하거나 변경되면 동작하지 않게됩니다.-->
+	<CMD cmd="userVariable.serviceKey = 'XAQRkAc4BBj5RWTWfdEX5Oc5ry0o4j74tmxD5R4HhJoegNLrNTlRZl6%2BCW%2BX%2BC28DAwBYq73UvcNcdB6n591bg%3D%3D'" />
+	<FUNCTION id="search">
+		<RETURN condition="latitude.text == 0 or longitude.text == 0" cmd="device.systemPopup('현위치를 확인하거나 직접 좌표를 입력하세요.')" />
+		<CMD cmd="url = 'http://openapi.e-gen.or.kr/openapi/service/rest/HsptlAsembySearchService/getHsptlMdcncLcinfoInqire?ServiceKey=' + userVariable.serviceKey"/>
+		<CMD cmd="url = url + '&amp;WGS84_LAT=' + latitude.text"/>
+		<CMD cmd="url = url + '&amp;WGS84_LON=' + longitude.text"/>
+		<CMD cmd="url = url + '&amp;pageNo=1&amp;numOfRows=100'"/>
+		<CMD cmd="xml = file.read(url)" />
+		<RETURN condition="not string.equals(xpath.evaluateEx(xml, '//resultCode/text()'), '00')" cmd="device.systemPopup(xpath.evaluateEx(xml, '//resultMsg/text()'))"/>
+		<RETURN condition="xpath.evaluateEx(xml, '//totalCount/text()') == 0" cmd="device.systemPopup('검색 결과가 없습니다.')"/>
+		<CMD cmd="hospitalList.dataSource = xml" />
+	</FUNCTION>
+	
+	<FUNCTION id="findLocation">
+		<CMD cmd="status=device.gps.status"/>
+		<RETURN condition="not (status == 'enabled' || status == 'gpsOnly' || status == 'networkOnly' || status == 'notDetermined')" cmd="device.systemPopup('GPS를 켜주세요.')" />
+		<CMD cmd="device.gps.addEventListener('onChange', 'function.onGpsChange')"/>
+		<CMD cmd="device.gps.start"/>
+	</FUNCTION>
+	<FUNCTION id="toTime(str)">
+		<RETURN cmd="string.sub(str, 0, 2) + ':' + string.sub(str, 2, 2) " />
+	</FUNCTION >
+
+	<FUNCTION id="onGpsChange(latitude, longitude, address, country, adminArea, subAdminArea, locality, subLocality, thoroughfare, subThoroughfare)">
+		<CMD cmd="device.gps.removeEventListener('onChange', 'function.onGpsChange')"/>
+		<CMD cmd="latitude.text = latitude"/>
+		<CMD cmd="longitude.text = longitude"/>
+		<CMD cmd="address.text=address"/>
+	</FUNCTION>
+
+	<FUNCTION id="showMap">
+		<CMD cmd="html = file.read('map.htm')" />
+		<CMD cmd="html = string.replace(html, '$ADDRESS$', xpath.evaluate('dutyAddr/text()'))"/>
+		<CMD cmd="html = string.replace(html, '$LATITUDE$', xpath.evaluate('latitude/text()'))"/>
+		<CMD cmd="html = string.replace(html, '$LONGITUDE$', xpath.evaluate('longitude/text()'))"/>
+		<CMD cmd="html = string.replace(html, '$MYLATITUDE$', latitude.text)"/>
+		<CMD cmd="html = string.replace(html, '$MYLONGITUDE$', longitude.text)"/>
+		<CMD cmd="mapTitle.text = xpath.evaluate('dutyName/text()')" />
+		<CMD cmd="mapWebView.src = html" />
+		<CMD cmd="detailMap.visible = true" />
+	</FUNCTION>
+</MOML>
+
+
