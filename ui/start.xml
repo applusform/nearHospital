@@ -47,7 +47,7 @@
 		</WINDOW>
 	</UILAYOUT>
 
-	<!-- https://www.data.go.kr 에서 오픈API - 국문 관광정보 서비스의 [SERVICE KEY]를 발급 받아야 합니다. -->
+	<!-- https://www.data.go.kr 에서 오픈API - 전국 병‧의원 찾기 서비스의 [SERVICE KEY]를 발급 받아야 합니다. -->
 	<!-- 다른 사람의 키를 사용할 경우 트래픽을 초과하거나 변경되면 동작하지 않게됩니다.-->
 	<CMD cmd="userVariable.serviceKey = 'XAQRkAc4BBj5RWTWfdEX5Oc5ry0o4j74tmxD5R4HhJoegNLrNTlRZl6%2BCW%2BX%2BC28DAwBYq73UvcNcdB6n591bg%3D%3D'" />
 	<FUNCTION id="search">
